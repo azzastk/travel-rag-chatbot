@@ -1,9 +1,14 @@
+import sys
+import os
+
+# Thêm backend/ vào sys.path để import các module nội bộ
+# Cần thiết khi chạy từ thư mục gốc: uvicorn backend.main:app
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-import os
 
 from schemas.chat_schema import ChatRequest
 from services.chatbot_service import ask_chatbot
@@ -13,12 +18,10 @@ from rag.retriever import init_retriever
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup — load data và khởi tạo retriever trong memory
     print("⏳ Loading travel data into memory...")
     documents = load_documents()
     init_retriever(documents)
     yield
-    
 
 
 app = FastAPI(title="VietTravel AI", lifespan=lifespan)
@@ -35,7 +38,6 @@ FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "fronten
 
 @app.get("/")
 def root():
-    """Serve giao diện chat."""
     index_path = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
