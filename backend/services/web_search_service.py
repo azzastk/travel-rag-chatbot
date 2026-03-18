@@ -16,7 +16,7 @@ def search_web(query: str) -> str:
         res.raise_for_status()
         data = res.json()
 
-        # ✅ Thử nhiều field hơn vì AbstractText thường rỗng
+        
         result = (
             data.get("AbstractText")
             or data.get("Answer")
@@ -24,7 +24,7 @@ def search_web(query: str) -> str:
             or ""
         )
 
-        # Lấy thêm từ RelatedTopics nếu vẫn rỗng
+        
         if not result and data.get("RelatedTopics"):
             snippets = []
             for topic in data["RelatedTopics"][:3]:

@@ -1,8 +1,7 @@
 import sys
 import os
 
-# Thêm backend/ vào sys.path để import các module nội bộ
-# Cần thiết khi chạy từ thư mục gốc: uvicorn backend.main:app
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, HTTPException

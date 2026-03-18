@@ -17,17 +17,13 @@ def get_retriever():
     raise RuntimeError("Retriever chưa được khởi tạo. Gọi init_retriever() khi startup trước.")
 
 def init_retriever(documents):
-    """
-    Khởi tạo ChromaDB in-memory với TF-IDF embedding cực nhẹ.
-    Không load model ML, tiết kiệm RAM tối đa cho Render free tier.
-    """
+    
     global _retriever
 
     from chromadb.utils import embedding_functions
     import chromadb
 
-    # Dùng DefaultEmbeddingFunction của ChromaDB (all-MiniLM-L6-v2 qua onnx)
-    # Nhẹ hơn sentence-transformers vì không load PyTorch
+    
     client = chromadb.Client()
     ef = embedding_functions.DefaultEmbeddingFunction()
 
