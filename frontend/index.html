@@ -14,10 +14,8 @@
         --sand2: #edd9b0;
         --teal: #1a6b6b;
         --teal2: #134f4f;
-        --teal3: #0d3535;
         --gold: #c8943a;
         --gold2: #e8b86d;
-        --cream: #fdfaf4;
         --dark: #0f2020;
         --muted: #5a7a7a;
         --radius: 16px;
@@ -172,8 +170,13 @@
         font-weight: 300;
         margin-top: 2px;
       }
-      .status-dot {
+      .header-right {
         margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .status-dot {
         display: flex;
         align-items: center;
         gap: 6px;
@@ -196,6 +199,22 @@
         50% {
           opacity: 0.4;
         }
+      }
+      .clear-btn {
+        padding: 5px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(200, 148, 58, 0.25);
+        background: rgba(200, 148, 58, 0.1);
+        color: var(--sand2);
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: "DM Sans", sans-serif;
+      }
+      .clear-btn:hover {
+        background: rgba(200, 148, 58, 0.2);
+        border-color: var(--gold2);
+        color: var(--gold2);
       }
       .suggestions {
         padding: 14px 0 8px;
@@ -293,7 +312,6 @@
         border-radius: var(--radius);
         line-height: 1.65;
         font-size: 14.5px;
-        position: relative;
       }
       .bubble.bot {
         background: rgba(255, 255, 255, 0.07);
@@ -391,7 +409,6 @@
       }
       .input-wrap {
         flex: 1;
-        position: relative;
       }
       textarea {
         width: 100%;
@@ -478,9 +495,12 @@
           <h1>VietTravel AI</h1>
           <p>Trợ lý du lịch thông minh · Smart Travel Assistant</p>
         </div>
-        <div class="status-dot">
-          <div class="dot"></div>
-          <span>Online</span>
+        <div class="header-right">
+          <button class="clear-btn" onclick="clearChat()">🗑 New chat</button>
+          <div class="status-dot">
+            <div class="dot"></div>
+            <span>Online</span>
+          </div>
         </div>
       </header>
       <div class="suggestions" id="suggestions">
@@ -535,7 +555,6 @@
       </div>
     </div>
     <script>
-      // Tự động detect URL — local dùng localhost, production dùng cùng origin
       const API_URL =
         window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1"
@@ -546,6 +565,7 @@
       const inputBox = document.getElementById("inputBox");
       const sendBtn = document.getElementById("sendBtn");
       let isLoading = false;
+      let history = []; // Lưu lịch sử hội thoại
 
       function autoResize(el) {
         el.style.height = "auto";
@@ -569,6 +589,19 @@
         if (w) w.remove();
         const s = document.getElementById("suggestions");
         if (s) s.style.display = "none";
+      }
+
+      function clearChat() {
+        history = [];
+        chatArea.innerHTML = "";
+        const welcome = document.createElement("div");
+        welcome.className = "welcome";
+        welcome.id = "welcome";
+        welcome.innerHTML = `<h2>Xin chào! Ready to <em>explore Vietnam?</em></h2><p>Hỏi tôi về bất kỳ địa điểm du lịch nào tại Việt Nam.<br/>Ask me anything about travel destinations in Vietnam.</p>`;
+        chatArea.appendChild(welcome);
+        const s = document.getElementById("suggestions");
+        if (s) s.style.display = "flex";
+        inputBox.focus();
       }
 
       function appendMessage(role, text) {
@@ -631,22 +664,39 @@
       async function sendMessage() {
         const text = inputBox.value.trim();
         if (!text || isLoading) return;
+
         isLoading = true;
         sendBtn.disabled = true;
         inputBox.value = "";
         inputBox.style.height = "auto";
+
         appendMessage("user", text);
         showTyping();
+
         try {
           const res = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text }),
+            body: JSON.stringify({
+              message: text,
+              history: history, // gửi kèm history
+            }),
           });
+
           const data = await res.json();
           removeTyping();
+
           if (res.ok) {
-            appendMessage("bot", data.answer || "No response.");
+            const answer = data.answer || "No response.";
+
+            // Lưu vào history sau khi nhận được câu trả lời
+            history.push({ role: "user", content: text });
+            history.push({ role: "assistant", content: answer });
+
+            // Giới hạn history 20 tin nhắn (10 lượt)
+            if (history.length > 20) history = history.slice(-20);
+
+            appendMessage("bot", answer);
           } else {
             appendMessage(
               "bot",
@@ -657,7 +707,7 @@
           removeTyping();
           appendMessage(
             "bot",
-            "⚠️ Cannot connect to server. Make sure the API is running.\n\nKhông thể kết nối server. Kiểm tra lại API.",
+            "⚠️ Cannot connect to server.\n\nKhông thể kết nối server. Kiểm tra lại API.",
           );
         } finally {
           isLoading = false;

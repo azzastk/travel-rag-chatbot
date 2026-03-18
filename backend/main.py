@@ -1,7 +1,6 @@
 import sys
 import os
 
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, HTTPException
@@ -53,7 +52,7 @@ def chat(req: ChatRequest):
     if not req.message or not req.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
     try:
-        answer = ask_chatbot(req.message)
+        answer = ask_chatbot(req.message, req.history)
         return {"answer": answer}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chatbot error: {str(e)}")

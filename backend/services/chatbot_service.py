@@ -13,28 +13,31 @@ from prompts.travel_prompt import SYSTEM_PROMPT
 client = Groq(api_key=GROQ_API_KEY)
 
 
-def ask_chatbot(question: str) -> str:
-    # 1. Thử RAG trước
+def ask_chatbot(question: str, history: list = []) -> str:
     context = retrieve_context(question)
 
-    # 2. Fallback web search nếu RAG không có kết quả
     if not context:
         context = search_web(question)
 
-    prompt = f"""{SYSTEM_PROMPT}
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-Context:
-{context if context else "No context available."}
+    
+    for msg in history[-6:]:
+        messages.append({
+            "role": msg.role,
+            "content": msg.content
+        })
 
-Question:
-{question}
+    if context:
+        user_content = f"Context:\n{context}\n\nQuestion:\n{question}"
+    else:
+        user_content = question
 
-Answer:
-"""
+    messages.append({"role": "user", "content": user_content})
 
     response = client.chat.completions.create(
         model=LLM_MODEL,
-        messages=[{"role": "user", "content": prompt}],
+        messages=messages,
         max_tokens=1024,
         temperature=0.7,
     )
