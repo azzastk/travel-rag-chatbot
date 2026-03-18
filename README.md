@@ -64,7 +64,7 @@ User (Browser)
 
 1. User gửi câu hỏi → FastAPI nhận request
 2. `chatbot_service` gọi RAG tìm context trong ChromaDB
-3. Lọc document theo **similarity threshold (≤ 0.8)** — loại bỏ kết quả không liên quan
+3. Lọc document theo **cosine distance threshold (≤ 0.5)** — loại bỏ kết quả không liên quan
 4. Nếu không có context → fallback DuckDuckGo web search
 5. Context + prompt → Groq API (llama-3.1-8b-instant) sinh câu trả lời
 6. Trả kết quả về người dùng
@@ -73,14 +73,14 @@ User (Browser)
 
 ## 🛠️ Tech Stack
 
-| Layer         | Technology                               | Lý do chọn / Reason                        |
-| ------------- | ---------------------------------------- | ------------------------------------------ |
-| **LLM**       | Groq API (llama-3.1-8b-instant)          | Miễn phí, ~500 tokens/s, không cần GPU     |
-| **Embedding** | sentence-transformers (all-MiniLM-L6-v2) | Chạy local, không cần API key, ~90MB       |
-| **Vector DB** | ChromaDB in-memory                       | Không lo mất data khi Render restart       |
-| **Backend**   | FastAPI + Python 3.10                    | Async, auto Swagger docs, production-ready |
-| **Frontend**  | Vanilla HTML/CSS/JS                      | Không cần build step, deploy đơn giản      |
-| **Deploy**    | Render free tier                         | CI/CD tự động từ GitHub                    |
+| Layer         | Technology                                    | Lý do chọn / Reason                                 |
+| ------------- | --------------------------------------------- | --------------------------------------------------- |
+| **LLM**       | Groq API (llama-3.1-8b-instant)               | Miễn phí, ~500 tokens/s, không cần GPU              |
+| **Embedding** | ChromaDB built-in (all-MiniLM-L6-v2 via ONNX) | Không cần PyTorch, ~150MB RAM, fit Render free tier |
+| **Vector DB** | ChromaDB in-memory                            | Không lo mất data khi Render restart                |
+| **Backend**   | FastAPI + Python 3.10                         | Async, auto Swagger docs, production-ready          |
+| **Frontend**  | Vanilla HTML/CSS/JS                           | Không cần build step, deploy đơn giản               |
+| **Deploy**    | Render free tier                              | CI/CD tự động từ GitHub                             |
 
 ---
 
