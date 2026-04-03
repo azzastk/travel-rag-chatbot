@@ -1,200 +1,157 @@
+---
+title: VietTravel AI
+emoji: 🌏
+colorFrom: teal
+colorTo: yellow
+sdk: docker
+pinned: true
+---
+
 # 🌏 VietTravel AI — Smart Travel Assistant Chatbot
 
-> **Trợ lý du lịch thông minh** giúp du khách khám phá các điểm đến tại Việt Nam thông qua giao diện chat tự nhiên, song ngữ Anh - Việt.
->
-> An **intelligent travel assistant** helping tourists discover destinations across Vietnam through a natural bilingual (EN/VI) chat interface.
+> Trợ lý du lịch thông minh cho Việt Nam · Bilingual travel assistant for Vietnam
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render)](https://viettravel-ai.onrender.com)
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Live Demo](https://img.shields.io/badge/🤗%20Live%20Demo-HuggingFace%20Spaces-FFD21E?style=for-the-badge)](https://huggingface.co/spaces/Azza1610/viettravel-ai)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
+[![Groq](https://img.shields.io/badge/Groq-llama--3.1-F55036?style=for-the-badge)](https://groq.com)
 
 ---
 
-## 📌 Giới thiệu / Overview
+## Giới thiệu / Overview
 
-**VI:** VietTravel AI là chatbot du lịch được xây dựng theo kiến trúc **RAG (Retrieval-Augmented Generation)** — kết hợp tìm kiếm ngữ nghĩa trong cơ sở dữ liệu vector với mô hình ngôn ngữ lớn để đưa ra câu trả lời chính xác, có ngữ cảnh về các điểm đến du lịch tại Việt Nam.
+**VI:** VietTravel AI là chatbot du lịch thông minh sử dụng kiến trúc **RAG (Retrieval-Augmented Generation)** kết hợp với **multilingual embedding** để hiểu câu hỏi bằng cả tiếng Việt lẫn tiếng Anh. Chatbot có thể gợi ý địa điểm tham quan, quán cà phê, nhà hàng và khách sạn tại 17 tỉnh thành Việt Nam.
 
-**EN:** VietTravel AI is a travel chatbot built on **RAG (Retrieval-Augmented Generation)** architecture — combining semantic search over a vector database with a large language model to deliver accurate, context-aware answers about travel destinations in Vietnam.
-
-**Tính năng nổi bật / Key Features:**
-
-- 🔍 RAG pipeline với similarity threshold — chỉ trả context thực sự liên quan
-- 🌐 Web search fallback — tự động tìm DuckDuckGo khi không có dữ liệu
-- ⚡ ChromaDB in-memory — không cần persist, tự load khi server khởi động
-- 🎨 Giao diện chat song ngữ Anh/Việt với travel theme
-- 🚀 Deploy sẵn trên Render free tier
+**EN:** VietTravel AI is an intelligent travel chatbot using **RAG** architecture with **multilingual embedding** to understand queries in both Vietnamese and English. It recommends destinations, cafes, restaurants, and hotels across 17 cities in Vietnam.
 
 ---
 
-## 🏗️ Kiến trúc hệ thống / System Architecture
+## Tính năng / Features
+
+- 🔍 **RAG + Metadata Filter** — tìm kiếm ngữ nghĩa kết hợp filter city + category → kết quả chính xác đúng thành phố, đúng loại hình
+- 🧠 **Multilingual Embedding** — model `paraphrase-multilingual-MiniLM-L12-v2` hiểu cả tiếng Việt lẫn tiếng Anh
+- 💬 **Chat History** — nhớ ngữ cảnh hội thoại, không lặp lại gợi ý cũ, hiểu câu hỏi tiếp theo
+- 🌐 **Web Search Fallback** — tự động tìm DuckDuckGo khi không có dữ liệu trong vector DB
+- 🗺️ **17 thành phố** — TPHCM, Hà Nội, Đà Nẵng, Hội An, Nha Trang, Đà Lạt, Huế, Cần Thơ, Phú Quốc, Vũng Tàu, Hạ Long, Sa Pa, Mũi Né, Phan Thiết, Phong Nha, Kon Tum, Buôn Ma Thuột
+- 🎨 **Bilingual UI** — giao diện chat song ngữ Anh/Việt với travel theme
+
+---
+
+## Kiến trúc / Architecture
 
 ```
-User (Browser)
+User Question
      │
      ▼
-┌─────────────────────────────────────┐
-│         FastAPI Backend             │
-│  ┌─────────────────────────────┐   │
-│  │      /chat endpoint          │   │
-│  └──────────┬──────────────────┘   │
-│             │                       │
-│  ┌──────────▼──────────────────┐   │
-│  │     Chatbot Service          │   │
-│  │  1. RAG → retrieve context   │   │
-│  │  2. Fallback → Web Search    │   │
-│  │  3. LLM → generate answer    │   │
-│  └──────────┬──────────────────┘   │
-│             │                       │
-│    ┌────────┴────────┐             │
-│    ▼                 ▼             │
-│ ┌──────────┐  ┌────────────────┐  │
-│ │ChromaDB  │  │ DuckDuckGo API │  │
-│ │(in-memory│  │  (web search   │  │
-│ │ vectors) │  │   fallback)    │  │
-│ └──────────┘  └────────────────┘  │
-│                                     │
-│  ┌──────────────────────────────┐  │
-│  │        Groq API              │  │
-│  │   llama-3.1-8b-instant       │  │
-│  └──────────────────────────────┘  │
-└─────────────────────────────────────┘
+Detect city + category từ câu hỏi + history
+     │
+     ▼
+ChromaDB metadata filter (city + category)
+     │
+     ├── Có kết quả → RAG context
+     └── Không có → DuckDuckGo web search
+                          │
+                          ▼
+              Groq API (llama-3.1-8b-instant)
+              + Chat history (6 tin nhắn gần nhất)
+              + Danh sách đã gợi ý (tránh lặp)
+                          │
+                          ▼
+                    Câu trả lời
 ```
 
-**Luồng xử lý / Request Flow:**
+---
 
-1. User gửi câu hỏi → FastAPI nhận request
-2. `chatbot_service` gọi RAG tìm context trong ChromaDB
-3. Lọc document theo **cosine distance threshold (≤ 0.5)** — loại bỏ kết quả không liên quan
-4. Nếu không có context → fallback DuckDuckGo web search
-5. Context + prompt → Groq API (llama-3.1-8b-instant) sinh câu trả lời
-6. Trả kết quả về người dùng
+## Tech Stack
+
+| Layer         | Technology                            |
+| ------------- | ------------------------------------- |
+| **LLM**       | Groq API — llama-3.1-8b-instant       |
+| **Embedding** | paraphrase-multilingual-MiniLM-L12-v2 |
+| **Vector DB** | ChromaDB in-memory                    |
+| **Backend**   | FastAPI + Python 3.11                 |
+| **Frontend**  | HTML / CSS / Vanilla JS               |
+| **Deploy**    | Hugging Face Spaces (Docker)          |
 
 ---
 
-## 🛠️ Tech Stack
-
-| Layer         | Technology                                    | Lý do chọn / Reason                                 |
-| ------------- | --------------------------------------------- | --------------------------------------------------- |
-| **LLM**       | Groq API (llama-3.1-8b-instant)               | Miễn phí, ~500 tokens/s, không cần GPU              |
-| **Embedding** | ChromaDB built-in (all-MiniLM-L6-v2 via ONNX) | Không cần PyTorch, ~150MB RAM, fit Render free tier |
-| **Vector DB** | ChromaDB in-memory                            | Không lo mất data khi Render restart                |
-| **Backend**   | FastAPI + Python 3.10                         | Async, auto Swagger docs, production-ready          |
-| **Frontend**  | Vanilla HTML/CSS/JS                           | Không cần build step, deploy đơn giản               |
-| **Deploy**    | Render free tier                              | CI/CD tự động từ GitHub                             |
-
----
-
-## 📁 Cấu trúc thư mục / Project Structure
+## Cấu trúc dự án / Project Structure
 
 ```
 travel-rag-chatbot/
-├── .env.example              # Template cấu hình môi trường
-├── .gitignore
-├── render.yaml               # Cấu hình deploy Render
+├── Dockerfile
 ├── requirements.txt
-├── README.md
-│
 ├── data/
-│   └── travel_dataset.json   # 56 điểm đến du lịch Việt Nam
-│
+│   └── travel_dataset.json       # 56 điểm đến du lịch
 ├── frontend/
-│   └── index.html            # Giao diện chat song ngữ
-│
+│   └── index.html                # Giao diện chat
 └── backend/
-    ├── main.py               # FastAPI app, serve frontend, startup events
-    ├── config.py             # Cấu hình tập trung
-    ├── schemas/
-    │   └── chat_schema.py    # Pydantic models
-    ├── prompts/
-    │   └── travel_prompt.py  # System prompt cho LLM
+    ├── main.py
+    ├── config.py
+    ├── schemas/chat_schema.py
+    ├── prompts/travel_prompt.py
     ├── rag/
-    │   ├── ingest_data.py    # Load JSON → Document objects
-    │   └── retriever.py      # ChromaDB in-memory, lazy init
+    │   ├── ingest_data.py
+    │   └── retriever.py
     └── services/
-        ├── chatbot_service.py     # Orchestrator chính
-        ├── rag_service.py         # RAG + similarity filtering
-        └── web_search_service.py  # DuckDuckGo fallback
+        ├── chatbot_service.py
+        ├── rag_service.py
+        └── web_search_service.py
 ```
 
 ---
 
-## ⚙️ Chạy local / Run Locally
-
-### Yêu cầu / Requirements
-
-- Python 3.10+
-- Groq API key miễn phí tại [console.groq.com](https://console.groq.com)
-
-### Các bước / Steps
+## Chạy local / Run Locally
 
 ```bash
-# 1. Clone repo
+# 1. Clone
 git clone https://github.com/azzastk/travel-rag-chatbot.git
 cd travel-rag-chatbot
 
-# 2. Tạo môi trường ảo
+# 2. Môi trường ảo
 python -m venv venv
-source venv/bin/activate      # Mac/Linux
-venv\Scripts\activate         # Windows
+venv\Scripts\activate        # Windows
+source venv/bin/activate     # Mac/Linux
 
 # 3. Cài dependencies
 pip install -r requirements.txt
 
-# 4. Tạo file .env
+# 4. Tạo .env
 cp .env.example .env
-# Mở .env và điền GROQ_API_KEY của bạn
+# Điền GROQ_API_KEY vào .env
 
-# 5. Tạo __init__.py (Windows)
-type nul > backend\__init__.py
-type nul > backend\schemas\__init__.py
-type nul > backend\prompts\__init__.py
-type nul > backend\rag\__init__.py
-type nul > backend\services\__init__.py
-
-# 6. Khởi động server
+# 5. Khởi động
 cd backend
 uvicorn main:app --reload
 ```
 
-Mở trình duyệt tại **http://localhost:8000**
+Mở **http://localhost:8000**
 
 ---
 
-## 📊 Dataset
+## API
 
-`data/travel_dataset.json` gồm **56 điểm đến** trên khắp Việt Nam:
+| Method | Endpoint  | Mô tả          |
+| ------ | --------- | -------------- |
+| GET    | `/`       | Giao diện chat |
+| GET    | `/health` | Health check   |
+| POST   | `/chat`   | Gửi câu hỏi    |
 
-| Trường / Field | Mô tả / Description                   |
-| -------------- | ------------------------------------- |
-| `location`     | Tên địa điểm                          |
-| `city`         | Thành phố / tỉnh                      |
-| `type`         | Loại hình (nature, beach, culture...) |
-| `region`       | Miền (north, central, south)          |
-| `price`        | Mức giá (budget, medium, high)        |
-| `activities`   | Hoạt động có thể làm                  |
-| `best_time`    | Thời điểm tốt nhất để ghé thăm        |
-| `text`         | Nội dung được dùng để tạo embeddings  |
+```json
+// Request
+{ "message": "Gợi ý quán cà phê ở Đà Nẵng", "history": [] }
+
+// Response
+{ "answer": "Ở Đà Nẵng mình hay dẫn khách đến Nắng Café..." }
+```
 
 ---
 
-## 📝 API Documentation
+## Deploy on Hugging Face Spaces
 
-Swagger UI tự động tại: `{BASE_URL}/docs`
-
-| Method | Endpoint  | Mô tả                         |
-| ------ | --------- | ----------------------------- |
-| `GET`  | `/`       | Serve giao diện chat          |
-| `GET`  | `/health` | Health check                  |
-| `POST` | `/chat`   | Gửi câu hỏi, nhận câu trả lời |
-
-**Request:**
-
-```json
-{ "message": "What are the best beaches in Vietnam?" }
+```bash
+git remote add space https://huggingface.co/spaces/Azza1610/viettravel-ai
+git push space main
 ```
 
-**Response:**
-
-```json
-{ "answer": "Vietnam has stunning beaches! I recommend..." }
-```
+Thêm secret `GROQ_API_KEY` tại **Settings → Variables and secrets**.
