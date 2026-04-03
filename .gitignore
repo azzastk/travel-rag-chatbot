@@ -18,3 +18,8 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+# Scripts cào dữ liệu — không push lên GitHub
+scrape_foursquare_v2.py
+scrape_foursquare.py
+scrape_places.py
+enrich_dataset.py
