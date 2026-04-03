@@ -1,7 +1,7 @@
 ---
 title: VietTravel AI
 emoji: 🌏
-colorFrom: teal
+colorFrom: green
 colorTo: yellow
 sdk: docker
 pinned: true
