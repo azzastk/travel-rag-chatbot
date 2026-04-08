@@ -1,6 +1,7 @@
 import sys
 import os
 
+# Thêm backend/ vào sys.path để import các module nội bộ
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, HTTPException
@@ -31,7 +32,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
+# HF Spaces chạy từ thư mục gốc /app
+# nên frontend/ nằm ở /app/frontend/
+FRONTEND_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "frontend"
+)
 
 
 @app.get("/")
@@ -39,7 +45,7 @@ def root():
     index_path = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
-    return {"message": "VietTravel AI is running. Frontend not found."}
+    return {"message": "VietTravel AI is running"}
 
 
 @app.get("/health")

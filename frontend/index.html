@@ -555,11 +555,12 @@
       </div>
     </div>
     <script>
+      // Auto-detect: local dùng port 8000, production dùng cùng origin
       const API_URL =
         window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1"
           ? "http://localhost:8000/chat"
-          : "/chat";
+          : window.location.origin + "/chat";
 
       const chatArea = document.getElementById("chatArea");
       const inputBox = document.getElementById("inputBox");

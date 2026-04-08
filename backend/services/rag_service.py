@@ -109,7 +109,8 @@ def retrieve_context(question: str) -> str:
         detected_category = _detect_category(question)
         is_general        = _is_general_query(question)
 
-        # Nếu là câu hỏi tổng quát (lịch trình, đi chơi...) → chỉ filter city
+        # Nếu là câu hỏi tổng quát (lịch trình, đi chơi, tham quan...)
+        # → chỉ filter city, exclude hotel và coffee (chỉ lấy destination và restaurant)
         if is_general:
             detected_category = ""
             print(f"[RAG] General query detected → skip category filter")
@@ -124,6 +125,15 @@ def retrieve_context(question: str) -> str:
                 ]
             }
             print(f"[RAG] Filter: city={detected_city}, category={detected_category}")
+        elif detected_city and is_general:
+            # General query (tham quan, đi chơi) → filter city + exclude hotel/coffee
+            where_filter = {
+                "$and": [
+                    {"city": {"$eq": detected_city}},
+                    {"category": {"$nin": ["hotel", "coffee"]}},
+                ]
+            }
+            print(f"[RAG] Filter: city={detected_city}, exclude hotel+coffee")
         elif detected_city:
             where_filter = {"city": {"$eq": detected_city}}
             print(f"[RAG] Filter: city={detected_city}")
